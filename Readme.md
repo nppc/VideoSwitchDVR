@@ -13,7 +13,7 @@ There is two additional pads (B0,B2), that can be used for controlling buttons o
 ## Current functionality
 - When Goggles are powered ON, then power to the DVR is delayed preventing cropping of recorded video (DVR known issue)
 - If Goggles is in normal mode (signal is coming from VRX), then DVR is receiving the VRX signal.
-- If Goggles in AV mode (signal coming from AVin), then DVR starts to send video own video signal to the Goggles.m
+- If Goggles in AV mode (signal coming from AVin), then DVR starts to send own video signal to the Goggles.
 
 ## Can be added with little software modifications
 - DVR buttons control: (start recording on power on, switch recording/playback mode)

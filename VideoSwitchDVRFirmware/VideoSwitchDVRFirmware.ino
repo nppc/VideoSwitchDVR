@@ -1,7 +1,7 @@
 #define DEBUG // Debug board (pins routed different)
-#define MODECHANGE_PLAYRECORD // Change DVR mode according to Goggles mode (normal/AV)
-#define START_RECORDING // Start recording on power on.
-#define POWERLOSS_STOPRECORDING // Stop recording on power loss.
+//#define MODECHANGE_PLAYRECORD // Change DVR mode according to Goggles mode (normal/AV)
+//#define START_RECORDING // Start recording on power on.
+//#define POWERLOSS_STOPRECORDING // Stop recording on power loss.
 
 #define POWERON_DELAY 2000	//ms
 
@@ -42,7 +42,7 @@ void setup()
 	bitClear(PORTB,PIN_DVR_B2);	// control DVR
 	DVR_B2_OFF;
 	bitClear(DDRB,PIN_EV100_SIG);	// listen for signal level pin
-	bitSet(PORTB, PIN_SWITCH_VIDEO); // Video Switch default video from EV100 to DVR (recording)
+	bitClear(PORTB, PIN_SWITCH_VIDEO); // Video Switch default video from EV100 to DVR (recording)
 	bitSet(DDRB, PIN_SWITCH_VIDEO); //Video Switch port direction
 	#ifdef POWERLOSS_STOPRECORDING
 		bitClear(DDRB,PIN_DVR_B0);
@@ -75,9 +75,9 @@ void loop() {
 	
 	// turn video switch according to EV100 state
 	if(EV100_state==EV100AV){
-		bitClear(PORTB, PIN_SWITCH_VIDEO);
-	}else{
 		bitSet(PORTB, PIN_SWITCH_VIDEO);
+	}else{
+		bitClear(PORTB, PIN_SWITCH_VIDEO);
 	}
 	
 #ifdef MODECHANGE_PLAYRECORD
