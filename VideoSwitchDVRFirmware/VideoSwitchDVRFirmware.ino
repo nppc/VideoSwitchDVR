@@ -42,8 +42,12 @@ void setup()
 	bitClear(PORTB,PIN_DVR_B2);	// control DVR
 	DVR_B2_OFF;
 	bitClear(DDRB,PIN_EV100_SIG);	// listen for signal level pin
+	// PIN_SWITCH_VIDEO has a double function.
+	// We are listening for power loss and switching video in/out.
+	// We need to listen only while recording. So, AVin should be connected when PIN_SWITCH_VIDEO is high (default).
+	// PIN_SWITCH_VIDEO is pulled up by Goggle power.
 	bitClear(PORTB, PIN_SWITCH_VIDEO); // Video Switch default video from EV100 to DVR (recording)
-	bitSet(DDRB, PIN_SWITCH_VIDEO); //Video Switch port direction
+	bitClear(DDRB, PIN_SWITCH_VIDEO); // Listening for power loss...
 	#ifdef POWERLOSS_STOPRECORDING
 		bitClear(DDRB,PIN_DVR_B0);
 		bitClear(PORTB,PIN_DVR_B0);
@@ -75,9 +79,13 @@ void loop() {
 	
 	// turn video switch according to EV100 state
 	if(EV100_state==EV100AV){
-		bitSet(PORTB, PIN_SWITCH_VIDEO);
+		//Active Low
+		//bitClear(PORTB, PIN_SWITCH_VIDEO);
+		bitSet(DDRB, PIN_SWITCH_VIDEO);
 	}else{
-		bitClear(PORTB, PIN_SWITCH_VIDEO);
+		//Floating (Pulled up by external resistor)
+		bitClear(DDRB, PIN_SWITCH_VIDEO);
+		//bitClear(PORTB, PIN_SWITCH_VIDEO);
 	}
 	
 #ifdef MODECHANGE_PLAYRECORD
@@ -111,12 +119,14 @@ void loop() {
 
 #ifdef POWERLOSS_STOPRECORDING
 	// sense B0 pin. If low, then stop recording as soon as possible
-	if(!(PINB & (1<<PIN_DVR_B0))){
-		// stop recording
-		DVR_B2_ON;
-		delay(200);
-		DVR_B2_OFF;
-		while(1){}; //wait until supercapacitor will be empty
+	if(DVR_state==0){ // check for power loss only while recording
+		if((PINB & (1<<PIN_SWITCH_VIDEO))==0){
+			// stop recording
+			DVR_B2_ON;
+			delay(200);
+			DVR_B2_OFF;
+			while(1){}; //wait until supercapacitor will be empty
+		}
 	}
 #endif
       
@@ -132,7 +142,7 @@ void ReadEV100state(){
 
 #ifdef START_RECORDING
 void startRecording(){
-	delay(3000);	// wait while DVR is booting and will be ready for recording
+	delay(9000);	// wait while DVR is booting and will be ready for recording
 	DVR_B2_ON;
 	delay(200);
 	DVR_B2_OFF;
