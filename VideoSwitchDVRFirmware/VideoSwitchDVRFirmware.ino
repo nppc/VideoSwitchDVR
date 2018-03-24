@@ -1,7 +1,7 @@
 #define DEBUG // Debug board (pins routed different)
 //#define MODECHANGE_PLAYRECORD // Change DVR mode according to Goggles mode (normal/AV)
 //#define START_RECORDING // Start recording on power on.
-//#define POWERLOSS_STOPRECORDING // Stop recording on power loss.
+#define POWERLOSS_STOPRECORDING // Stop recording on power loss.
 
 #define POWERON_DELAY 2000	//ms
 
@@ -9,28 +9,32 @@
 #ifdef DEBUG
 	#define PIN_SWITCH_VIDEO 	0	//PB0
 	#define PIN_EV100_SIG		3 	//PB3
-	#define PIN_DVR_B0			2 	//PB2 (DEBUG LED)
-	#define PIN_DVR_B2 			4	//PB4
-	#define PIN_DVR_POWER		1	//PB1 (LED)
+	#define PIN_DVR_K1			1 	//PB1 (DEBUG LED)
+	#define PIN_DVR_K3 			4	//PB4
+	#define PIN_DVR_POWER		2	//PB2 (LED)
 #else
 	#define PIN_SWITCH_VIDEO 	4	//PB4
 	#define PIN_EV100_SIG		3 	//PB3
-	#define PIN_DVR_B0 			0	//PB0
-	#define PIN_DVR_B2 			2	//PB2
+	#define PIN_DVR_K1 			0	//PB0
+	#define PIN_DVR_K3 			2	//PB2
 	#define PIN_DVR_POWER		1	//PB1
 #endif
 
 #define EV100AV (1<<PIN_EV100_SIG)	// AV Mode when pin PIN_EV100_SIG is HIGH
 	
 // Pressing button for 2 seconds toggles DVR mode (Record/Playback)
-#define DVR_B2_OFF bitClear(DDRB, PIN_DVR_B2) // Button released
-#define DVR_B2_ON bitSet(DDRB, PIN_DVR_B2) // Button pressed
+#ifdef DEBUG
+	#define LED_DEBUG_ON bitClear(PORTB, PIN_DVR_K1) // LED ON
+	#define LED_DEBUG_OFF bitSet(PORTB, PIN_DVR_K1) // LED OFF
+#else
+	#define DVR_K1_OFF bitClear(DDRB, PIN_DVR_K1) // Button released
+	#define DVR_K1_ON bitSet(DDRB, PIN_DVR_K1) // Button pressed
+#endif
+// Start/stop recording
+#define DVR_K3_OFF bitClear(DDRB, PIN_DVR_K3) // Button released
+#define DVR_K3_ON bitSet(DDRB, PIN_DVR_K3) // Button pressed
 #define DVR_POWER_ON bitClear(PORTB, PIN_DVR_POWER) // DVR POWER ON
 #define DVR_POWER_OFF bitSet(PORTB, PIN_DVR_POWER) // DVR POWER OFF
-#ifdef DEBUG
-	#define LED_DEBUG_ON bitClear(PORTB, PIN_DVR_B0) // LED ON
-	#define LED_DEBUG_OFF bitSet(PORTB, PIN_DVR_B0) // LED OFF
-#endif
 
 uint8_t DVR_state;	// 0 - recording; anything else - playback
 uint8_t EV100_state = 0;
@@ -39,8 +43,12 @@ void setup()
 {
 	DVR_POWER_OFF; // DVR Power is OFF
 	bitSet(DDRB,PIN_DVR_POWER);	//  port as output
-	bitClear(PORTB,PIN_DVR_B2);	// control DVR
-	DVR_B2_OFF;
+#ifndef DEBUG
+	bitClear(PORTB,PIN_DVR_K1);	// control DVR
+	DVR_K1_OFF;
+#endif
+	bitClear(PORTB,PIN_DVR_K3);	// control DVR
+	DVR_K3_OFF;
 	bitClear(DDRB,PIN_EV100_SIG);	// listen for signal level pin
 	// PIN_SWITCH_VIDEO has a double function.
 	// We are listening for power loss and switching video in/out.
@@ -48,21 +56,23 @@ void setup()
 	// PIN_SWITCH_VIDEO is pulled up by Goggle power.
 	bitClear(PORTB, PIN_SWITCH_VIDEO); // Video Switch default video from EV100 to DVR (recording)
 	bitClear(DDRB, PIN_SWITCH_VIDEO); // Listening for power loss...
-	#ifdef POWERLOSS_STOPRECORDING
-		bitClear(DDRB,PIN_DVR_B0);
-		bitClear(PORTB,PIN_DVR_B0);
-	#endif
 	
 	#ifdef DEBUG
-		bitSet(DDRB, PIN_DVR_B0);
 		// when not connected to EV100. Later we remove pullup.
 		bitSet(PORTB, PIN_EV100_SIG); //PullUp
+		bitSet(DDRB, PIN_DVR_K1);
 		LED_DEBUG_OFF;
 	#endif
 	
 	DVR_state = 0; // After power on we are in recording mode
-	
+
+	#ifdef DEBUG
+		LED_DEBUG_ON;
+	#endif		
 	delay(POWERON_DELAY);
+	#ifdef DEBUG
+		LED_DEBUG_OFF;
+	#endif		
 	DVR_POWER_ON;
 
 	#ifdef START_RECORDING
@@ -91,12 +101,12 @@ void loop() {
 #ifdef MODECHANGE_PLAYRECORD
 	if(EV100_state==EV100AV){
 		// switch DVR to PLAY mode. Pressing K3 button for 2 seconds will stop recording and go to PLAY mode.
-		DVR_B2_ON;
+		DVR_K1_ON;
 		#ifdef DEBUG
 		LED_DEBUG_ON;
 		#endif
 		delay(2000);
-		DVR_B2_OFF;
+		DVR_K1_OFF;
 		#ifdef DEBUG
 		LED_DEBUG_OFF;
 		#endif		
@@ -118,13 +128,19 @@ void loop() {
 #endif
 
 #ifdef POWERLOSS_STOPRECORDING
-	// sense B0 pin. If low, then stop recording as soon as possible
-	if(DVR_state==0){ // check for power loss only while recording
+	// sense PIN_SWITCH_VIDEO pin only while EV100 in normal mode. If low, then stop recording as soon as possible
+	if(EV100_state==0){ // check for power loss only while recording
 		if((PINB & (1<<PIN_SWITCH_VIDEO))==0){
 			// stop recording
-			DVR_B2_ON;
+			#ifdef DEBUG
+				LED_DEBUG_ON;
+			#endif		
+			DVR_K3_ON;
 			delay(200);
-			DVR_B2_OFF;
+			#ifdef DEBUG
+				LED_DEBUG_OFF;
+			#endif		
+			DVR_K3_OFF;
 			while(1){}; //wait until supercapacitor will be empty
 		}
 	}
@@ -143,8 +159,8 @@ void ReadEV100state(){
 #ifdef START_RECORDING
 void startRecording(){
 	delay(9000);	// wait while DVR is booting and will be ready for recording
-	DVR_B2_ON;
+	DVR_K3_ON;
 	delay(200);
-	DVR_B2_OFF;
+	DVR_K3_OFF;
 }
 #endif
