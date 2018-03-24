@@ -1,7 +1,7 @@
-#define DEBUG // Debug board (pins routed different)
+//#define DEBUG // Debug board (pins routed different)
 //#define MODECHANGE_PLAYRECORD // Change DVR mode according to Goggles mode (normal/AV)
-//#define START_RECORDING // Start recording on power on.
-#define POWERLOSS_STOPRECORDING // Stop recording on power loss.
+#define START_RECORDING // Start recording on power on.
+//#define POWERLOSS_STOPRECORDING // Stop recording on power loss.
 
 #define POWERON_DELAY 2000	//ms
 
@@ -15,8 +15,8 @@
 #else
 	#define PIN_SWITCH_VIDEO 	4	//PB4
 	#define PIN_EV100_SIG		3 	//PB3
-	#define PIN_DVR_K1 			0	//PB0
-	#define PIN_DVR_K3 			2	//PB2
+	#define PIN_DVR_K1 			0	//PB0 start/stop recording
+	#define PIN_DVR_K3 			2	//PB2 3sec press - enter playback mode
 	#define PIN_DVR_POWER		1	//PB1
 #endif
 
@@ -101,12 +101,12 @@ void loop() {
 #ifdef MODECHANGE_PLAYRECORD
 	if(EV100_state==EV100AV){
 		// switch DVR to PLAY mode. Pressing K3 button for 2 seconds will stop recording and go to PLAY mode.
-		DVR_K1_ON;
+		DVR_K3_ON;
 		#ifdef DEBUG
 		LED_DEBUG_ON;
 		#endif
-		delay(2000);
-		DVR_K1_OFF;
+		delay(3000);
+		DVR_K3_OFF;
 		#ifdef DEBUG
 		LED_DEBUG_OFF;
 		#endif		
@@ -135,12 +135,12 @@ void loop() {
 			#ifdef DEBUG
 				LED_DEBUG_ON;
 			#endif		
-			DVR_K3_ON;
+			DVR_K1_ON;
 			delay(200);
 			#ifdef DEBUG
 				LED_DEBUG_OFF;
 			#endif		
-			DVR_K3_OFF;
+			DVR_K1_OFF;
 			while(1){}; //wait until supercapacitor will be empty
 		}
 	}
@@ -159,8 +159,8 @@ void ReadEV100state(){
 #ifdef START_RECORDING
 void startRecording(){
 	delay(9000);	// wait while DVR is booting and will be ready for recording
-	DVR_K3_ON;
+	DVR_K1_ON;
 	delay(200);
-	DVR_K3_OFF;
+	DVR_K1_OFF;
 }
 #endif
