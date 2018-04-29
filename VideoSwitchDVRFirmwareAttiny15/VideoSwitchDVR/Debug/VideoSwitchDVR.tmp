@@ -1,0 +1,30 @@
+<ASSEMBLER_INFO>
+ <VERSION>2.2.7</VERSION>
+ <DEVICE>"ATtiny15"</DEVICE>
+ <WORKING_DIR>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\Debug</WORKING_DIR>
+ <INCLUDE_PATH>
+  <DIR>C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATtiny_DFP\1.3.147\avrasm\inc</DIR>
+  <DIR>C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avrassembler\Include</DIR>
+  <DIR></DIR>
+ </INCLUDE_PATH>
+ <SOURCE_FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</SOURCE_FILE>
+ <INCLUDED_FILES>
+  <FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\tn15def.inc</FILE>
+ </INCLUDED_FILES>
+ <OBJECT_FILES>
+  <FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\Debug\VideoSwitchDVR.obj</FILE>
+ </OBJECT_FILES>
+ <HEX_FILES>
+  <FILE>VideoSwitchDVR.hex</FILE>
+ </HEX_FILES>
+ <OUTPUT_FILES>
+  <FILE>VideoSwitchDVR.map</FILE>
+  <FILE>VideoSwitchDVR.lss</FILE>
+ </OUTPUT_FILES>
+ <LABELS>
+  <RESET><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>33</LINE></RESET>
+  <loop><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>54</LINE></loop>
+  <delay5s><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>66</LINE></delay5s>
+  <L1><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>70</LINE></L1>
+ </LABELS>
+</ASSEMBLER_INFO>
