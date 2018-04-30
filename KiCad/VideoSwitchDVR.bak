@@ -305,12 +305,8 @@ F 1 "DVR_VIDEO" V 6300 3000 50  0000 C CNN
 F 2 "KiCadCustomLibs:USB_3_PADS" H 6200 3000 50  0001 C CNN
 F 3 "" H 6200 3000 50  0001 C CNN
 	1    6200 3000
-	1    0    0    1   
+	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	6000 3100 5400 3100
-Wire Wire Line
-	5400 2900 6000 2900
 $Comp
 L GND #PWR12
 U 1 1 5A5E209A
@@ -459,9 +455,9 @@ $EndComp
 Wire Wire Line
 	7300 3650 7100 3650
 Wire Wire Line
-	7100 3550 7100 3650
+	7100 3650 7100 3550
 Wire Wire Line
-	6200 3550 7100 3550
+	7100 3550 6200 3550
 Wire Wire Line
 	7300 3750 7100 3750
 Wire Wire Line
@@ -614,4 +610,8 @@ F 3 "" H 7400 2900 50  0001 C CNN
 	1    7400 2900
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	6000 2900 5400 2900
+Wire Wire Line
+	5400 3100 6000 3100
 $EndSCHEMATC

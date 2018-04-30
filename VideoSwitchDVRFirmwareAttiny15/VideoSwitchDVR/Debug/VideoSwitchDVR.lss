@@ -1,10 +1,10 @@
 
-AVRASM ver. 2.2.7  C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm Sun Apr 29 20:46:01 2018
+AVRASM ver. 2.2.7  C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm Mon Apr 30 22:27:39 2018
 
 [builtin](2): Including file 'C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\tn15def.inc'
-C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm(7): Including file 'C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\tn15def.inc'
+C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm(17): Including file 'C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\tn15def.inc'
 [builtin](2): Including file 'C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\tn15def.inc'
-C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm(7): Including file 'C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\tn15def.inc'
+C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm(17): Including file 'C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\tn15def.inc'
                                  
                                  ;
                                  
@@ -398,9 +398,19 @@ C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\mai
                                  
                                  ; VideoSwitchDVR.asm
                                  ;
-                                 ; Created: 4/29/2018 7:52:49 PM
-                                 ; Author : Pavel
+                                 ; Author : Pavel Palonen
                                  ;
+                                 
+                                 ; Attiny15 runs with default fuses (at 1.6mhz)
+                                 
+                                 ;#define DEBUG
+                                 #define MODECHANGE_PLAYRECORD ; Change DVR mode according to Goggles mode (normal/AV)
+                                 ;#define START_RECORDING ; Start recording on power on.
+                                 ;#define POWERLOSS_STOPRECORDING ; Stop recording on power loss.
+                                 
+                                 #define POWERON_DELAY 2000	;ms
+                                 
+                                 
                                  .include "tn15def.inc"
                                  
                                  ;***** Created: 2011-02-09 12:03 ******* Source: ATtiny15.xml ************
@@ -449,15 +459,51 @@ C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\mai
                                  .equ	PIN_DVR_POWER		= PB1
                                  .equ	PIN_DVR_K1			= PB0
                                  .equ	PIN_DVR_K3			= PB2
-                                 .equ	PIN_EV100_SIG		= PB4
-                                 .equ	PIN_SWITCH_VIDEO	= PB3
+                                 .equ	PIN_EV100_SIG		= PB4	; In Attiny25 it is PB3
+                                 .equ	PIN_SWITCH_VIDEO	= PB3	; In Attiny25 it is PB4
                                  
                                  .def	z0			= r0
                                  .def	z1			= r1
                                  .def	r_sreg		= r2	; Store SREG register in interrupts
-                                 
+                                 .def	DVR_state	= r3	; 0 - recording; anything else - playback
+                                 .def	EV100_state = r4
                                  .def	tmp			= r16
+                                 .def	tmp1		= r17
+                                 .def	tmp2		= r18
                                  
+                                 #ifdef DEBUG
+                                 #endif
+                                 
+                                 ; Some macros
+                                 ;DVR_K1_OFF
+                                 .MACRO DVR_K1_OFF
+                                 	cbi DDRB, PIN_DVR_K1 ; Button released
+                                 .ENDMACRO
+                                 ;DVR_K1_ON
+                                 .MACRO DVR_K1_ON
+                                 	sbi DDRB, PIN_DVR_K1 ; Button presed
+                                 .ENDMACRO
+                                 ; Start/stop recording
+                                 ;DVR_K3_OFF
+                                 .MACRO DVR_K3_OFF
+                                 	cbi DDRB, PIN_DVR_K3 ; Button released
+                                 .ENDMACRO
+                                 ;DVR_K3_ON
+                                 .MACRO DVR_K3_ON
+                                 	sbi DDRB, PIN_DVR_K3 ; Button pressed
+                                 .ENDMACRO
+                                 ;DVR_POWER_ON
+                                 .MACRO DVR_POWER_ON
+                                 	cbi PORTB, PIN_DVR_POWER ; DVR POWER ON
+                                 .ENDMACRO
+                                 ;DVR_POWER_OFF
+                                 .MACRO DVR_POWER_OFF
+                                 	sbi PORTB, PIN_DVR_POWER ; DVR POWER OFF
+                                 .ENDMACRO
+                                 
+                                 .EQU EV100AV = (1<<PIN_EV100_SIG)	; AV Mode when pin PIN_EV100_SIG is HIGH
+                                 
+                                 ; ***!!!!!*** Hardware Stack in Attiny15 is limited to 3 subsequent subroutine calls or interrupts
                                  .CSEG
                                  .ORG 0
 000000 c008                      rjmp RESET ; Reset handler
@@ -477,43 +523,125 @@ C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\mai
 00000c 2400                      	clr z0
 00000d 2411                      	clr z1
 00000e 9413                      	inc z1
-                                 
-                                 	; ***** SETUP *****
+                                 	
+                                 ; ***** SETUP *****
                                  	; initialize io pins
-00000f 9ac1                      	sbi PORTB, PIN_DVR_POWER ; DVR POWER OFF
-000010 9ab9                      	sbi	DDRB, PIN_DVR_POWER
+00000f 9ac1                      	DVR_POWER_OFF
+000010 9ab9                      	sbi	DDRB, PIN_DVR_POWER	; direction is output
+000011 98c0                      	cbi PORTB, PIN_DVR_K1 ;	control DVR
+000012 98b8                      	DVR_K1_OFF
+000013 98c2                      	cbi PORTB, PIN_DVR_K3 ; control DVR
+000014 98ba                      	DVR_K3_OFF
+000015 98bc                      	cbi DDRB, PIN_EV100_SIG ; listen for signal level pin
+000016 98c4                      	cbi PORTB, PIN_EV100_SIG ; no pullup
+                                 
+                                 	#ifdef DEBUG
+                                 	#endif
                                  	; PIN_SWITCH_VIDEO has a double function.
                                  	; We are listening for power loss and switching video in/out.
                                  	; We need to listen only while recording. So, AVin should be connected when PIN_SWITCH_VIDEO is high (default).
                                  	; PIN_SWITCH_VIDEO is pulled up by Goggle power.
-000011 98c3                      	cbi PORTB, PIN_SWITCH_VIDEO	; Video Switch default video from EV100 to DVR (recording)
-                                 	;cbi DDRB, PIN_SWITCH_VIDEO ; Listening for power loss...
-000012 9abb                      	sbi DDRB, PIN_SWITCH_VIDEO ; Listening for power loss...
+000017 98c3                      	cbi PORTB, PIN_SWITCH_VIDEO	; Video Switch default video from EV100 to DVR (recording)
+000018 98bb                      	cbi DDRB, PIN_SWITCH_VIDEO ; Listening for power loss...
                                  
-                                 	; ***** LOOP *****
+                                 	; DVR power ON delay
+000019 e104                      	ldi tmp, POWERON_DELAY/100
+00001a d02c                      	rcall delayNs
+                                 	
+00001b 98c1                      	DVR_POWER_ON
+                                 
+                                 	#ifdef START_RECORDING
+                                 	#endif
+                                 	
+00001c 2433                      	clr DVR_state ; After power on we are in recording mode
+                                 	;rcall ReadEV100state ; update EV100state variable
+                                 
+                                 ; ***** LOOP *****
                                  loop:
-                                 	;sbi DDRB, PIN_SWITCH_VIDEO
-000013 9ac3                      	sbi PORTB, PIN_SWITCH_VIDEO
-000014 d003                      	rcall delay5s
-                                 	;  Floating (Pulled up by external resistor)
-                                 	;cbi DDRB, PIN_SWITCH_VIDEO
-000015 98c3                      	cbi PORTB, PIN_SWITCH_VIDEO
-000016 d001                      	rcall delay5s
+00001d cfff                      	rjmp loop
+                                 	#ifdef DEBUG
+                                 	#endif
+00001e d016                      	rcall ReadEV100state ; update EV100state variable
                                  
-000017 cffb                          rjmp loop
+                                 	; turn video switch according to EV100 state
+00001f e100                      	ldi tmp, EV100AV
+000020 1240                      	cpse EV100_state, tmp
+000021 98bb                      	cbi DDRB, PIN_SWITCH_VIDEO ; Floating (Pulled up by external resistor)
+000022 1040                      	cpse EV100_state, z0
+000023 9abb                      	sbi DDRB, PIN_SWITCH_VIDEO ; Active Low
+                                 
+                                 	; Define logic for MODECHANGE_PLAYRECORD
+                                 	#ifdef MODECHANGE_PLAYRECORD
+000024 e100                      		ldi tmp, EV100AV
+000025 1240                      		cpse EV100_state, tmp
+000026 c006                      		rjmp EV100RecordMode
+                                 		; switch DVR to PLAY mode. Pressing K3 button for 3 seconds will stop recording and go to PLAY mode.
+000027 9aba                      		DVR_K3_ON
+000028 e10e                      		ldi tmp, 3000/100
+000029 d01d                      		rcall delayNs
+00002a 98ba                      		DVR_K3_OFF
+00002b 2c31                      		mov DVR_state,z1 ; play
+00002c c007                      		rjmp loopCont1
+                                 	EV100RecordMode:
+                                 		; EV100 mode is normal. Need to  determine, are we just switched from AV?
+00002d 1031                      		cpse DVR_state,z1	; if(DVR_state!=0)
+00002e c005                      		rjmp loopCont1
+                                 		; we need to reboot DVR to make 100% switch to recording mode
+00002f 9ac1                      		DVR_POWER_OFF
+000030 e104                      		ldi tmp, 2000/100
+000031 d015                      		rcall delayNs
+000032 98c1                      		DVR_POWER_ON
+000033 2c30                      		mov DVR_state,z0 ; record
+                                 		#ifdef START_RECORDING
+                                 		#endif
+                                 	loopCont1:
+                                 	#endif
                                  
                                  
-                                 delay5s:	; 5s at 1.6 MHz
-000018 e229                          ldi  r18, 41
-000019 e936                          ldi  r19, 150
-00001a e840                          ldi  r20, 128
-00001b 954a                      L1: dec  r20
-00001c f7f1                          brne L1
-00001d 953a                          dec  r19
-00001e f7e1                          brne L1
-00001f 952a                          dec  r18
-000020 f7d1                          brne L1
-000021 9508                      	ret
+                                 	#ifdef POWERLOSS_STOPRECORDING
+                                 	#endif
+000034 cfe8                      rjmp loop
+                                 
+                                 
+                                 #ifdef START_RECORDING
+                                 #endif
+                                 
+                                 ; We read control pin from EV100 goggles and make sure, this is not a spike
+                                 ReadEV100state:
+                                 	; read new_state
+000035 b316                      	in tmp1, PINB ;new_state
+000036 7110                      	andi tmp1, EV100AV
+000037 2700                      	clr tmp
+                                 	; small delay
+                                 RdEV100StateL1:	
+000038 950a                      	dec tmp
+000039 f7f1                      	brne RdEV100StateL1
+                                 	; check pin again and update EV100_state accordingly
+00003a b326                      	in tmp2, PINB ;new_state
+00003b 7120                      	andi tmp2, EV100AV
+00003c 1312                      	cpse tmp1, tmp2
+00003d 2d14                      	mov tmp1, EV100_state	; no change to EV100_state
+00003e 2e41                      	mov EV100_state, tmp1
+00003f 9508                      	ret
+                                 
+                                 delay100ms:
+                                 ; 99ms 995us 625 ns at 1.6 MHz (rcall and ret are not included, about 5us)
+000040 ed10                          ldi  tmp1, 208
+000041 ec28                          ldi  tmp2, 200
+                                 d100ms: 
+000042 952a                      	dec  tmp2
+000043 f7f1                          brne d100ms
+000044 951a                          dec  tmp1
+000045 f7e1                          brne d100ms
+000046 9508                      	ret
+                                 	
+                                 ; Delay subroutine
+                                 ; Input variable: tmp = ms/100	
+                                 delayNs:
+000047 dff8                      dNs:rcall delay100ms
+000048 950a                          dec  tmp
+000049 f7e9                          brne dNs
+00004a 9508                      	ret
 
 
 RESOURCE USE INFORMATION
@@ -531,36 +659,36 @@ counted separately from r26..r31 here.
 .dseg memory usage only counts static data declared with .byte
 
 "ATtiny15" register use summary:
-x  :   0 y  :   0 z  :   0 r0 :   1 r1 :   2 r2 :   0 r3 :   0 r4 :   0 
+x  :   0 y  :   0 z  :   0 r0 :   3 r1 :   4 r2 :   0 r3 :   4 r4 :   5 
 r5 :   0 r6 :   0 r7 :   0 r8 :   0 r9 :   0 r10:   0 r11:   0 r12:   0 
-r13:   0 r14:   0 r15:   0 r16:   2 r17:   0 r18:   2 r19:   2 r20:   2 
+r13:   0 r14:   0 r15:   0 r16:  12 r17:   7 r18:   5 r19:   0 r20:   0 
 r21:   0 r22:   0 r23:   0 r24:   0 r25:   0 r26:   0 r27:   0 r28:   0 
 r29:   0 r30:   0 r31:   0 
-Registers used: 6 out of 35 (17.1%)
+Registers used: 7 out of 35 (20.0%)
 
 "ATtiny15" instruction use summary:
-adc   :   0 add   :   0 and   :   0 andi  :   0 asr   :   0 bclr  :   0 
+adc   :   0 add   :   0 and   :   0 andi  :   2 asr   :   0 bclr  :   0 
 bld   :   0 brbc  :   0 brbs  :   0 brcc  :   0 brcs  :   0 breq  :   0 
 brge  :   0 brhc  :   0 brhs  :   0 brid  :   0 brie  :   0 brlo  :   0 
-brlt  :   0 brmi  :   0 brne  :   3 brpl  :   0 brsh  :   0 brtc  :   0 
-brts  :   0 brvc  :   0 brvs  :   0 bset  :   0 bst   :   0 cbi   :   2 
-cbr   :   0 clc   :   0 clh   :   0 cli   :   1 cln   :   0 clr   :   2 
+brlt  :   0 brmi  :   0 brne  :   4 brpl  :   0 brsh  :   0 brtc  :   0 
+brts  :   0 brvc  :   0 brvs  :   0 bset  :   0 bst   :   0 cbi   :  12 
+cbr   :   0 clc   :   0 clh   :   0 cli   :   1 cln   :   0 clr   :   4 
 cls   :   0 clt   :   0 clv   :   0 clz   :   0 com   :   0 cp    :   0 
-cpc   :   0 cpi   :   0 cpse  :   0 dec   :   3 eor   :   0 in    :   0 
-inc   :   1 ld    :   0 ldi   :   4 lpm   :   0 lsl   :   0 lsr   :   0 
-mov   :   0 neg   :   0 nop   :   0 or    :   0 ori   :   0 out   :   1 
-rcall :   2 ret   :   1 reti  :   8 rjmp  :   2 rol   :   0 ror   :   0 
-sbc   :   0 sbci  :   0 sbi   :   4 sbic  :   0 sbis  :   0 sbr   :   0 
+cpc   :   0 cpi   :   0 cpse  :   5 dec   :   4 eor   :   0 in    :   2 
+inc   :   1 ld    :   0 ldi   :   8 lpm   :   0 lsl   :   0 lsr   :   0 
+mov   :   4 neg   :   0 nop   :   0 or    :   0 ori   :   0 out   :   1 
+rcall :   5 ret   :   3 reti  :   8 rjmp  :   6 rol   :   0 ror   :   0 
+sbc   :   0 sbci  :   0 sbi   :   5 sbic  :   0 sbis  :   0 sbr   :   0 
 sbrc  :   0 sbrs  :   0 sec   :   0 seh   :   0 sei   :   0 sen   :   0 
 ser   :   0 ses   :   0 set   :   0 sev   :   0 sez   :   0 sleep :   0 
 st    :   0 sub   :   0 subi  :   0 swap  :   0 tst   :   0 wdr   :   0 
 
-Instructions used: 13 out of 90 (14.4%)
+Instructions used: 17 out of 90 (18.9%)
 
 "ATtiny15" memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x000044     68      0     68    1024   6.6%
+[.cseg] 0x000000 0x000096    150      0    150    1024  14.6%
 [.dseg] 0x000000 0x000060      0      0      0       0      -
 [.eseg] 0x000000 0x000000      0      0      0      64   0.0%
 

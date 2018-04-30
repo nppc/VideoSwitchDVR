@@ -6,6 +6,7 @@
 
 ; Attiny15 runs with default fuses (at 1.6mhz)
 
+;#define DEBUG
 #define MODECHANGE_PLAYRECORD ; Change DVR mode according to Goggles mode (normal/AV)
 ;#define START_RECORDING ; Start recording on power on.
 ;#define POWERLOSS_STOPRECORDING ; Stop recording on power loss.
@@ -29,6 +30,10 @@
 .def	tmp			= r16
 .def	tmp1		= r17
 .def	tmp2		= r18
+
+#ifdef DEBUG
+.def	dbg			= r5
+#endif
 
 ; Some macros
 ;DVR_K1_OFF
@@ -89,6 +94,12 @@ RESET:
 	cbi PORTB, PIN_DVR_K3 ; control DVR
 	DVR_K3_OFF
 	cbi DDRB, PIN_EV100_SIG ; listen for signal level pin
+	cbi PORTB, PIN_EV100_SIG ; no pullup
+
+	#ifdef DEBUG
+		sbi DDRB, PIN_EV100_SIG ; configure as output
+		clr dbg
+	#endif
 	; PIN_SWITCH_VIDEO has a double function.
 	; We are listening for power loss and switching video in/out.
 	; We need to listen only while recording. So, AVin should be connected when PIN_SWITCH_VIDEO is high (default).
@@ -111,6 +122,22 @@ RESET:
 
 ; ***** LOOP *****
 loop:
+	rjmp loop
+	#ifdef DEBUG
+	rcall delay100ms
+	inc dbg
+	cpse dbg, z0
+	rjmp contdbg
+	; toggle sigG
+	ldi tmp1, (1<<PIN_EV100_SIG)
+	in tmp, PORTB
+	and tmp, tmp1
+	cpse tmp, z0
+	cbi PORTB, PIN_EV100_SIG
+	cpse tmp, tmp1
+	sbi PORTB, PIN_EV100_SIG
+	contdbg:
+	#endif
 	rcall ReadEV100state ; update EV100state variable
 
 	; turn video switch according to EV100 state
@@ -173,7 +200,7 @@ rjmp loop
 #ifdef START_RECORDING
 	startRecording:
 		; we can't use here delayNs, because our stack is only 3 levels deep (one we need to leave for possible interrupts)
-		ldi tmp, 9000/100 ;	wait while DVR is booting and will be ready for recording
+		ldi tmp, 15000/100 ;	wait while DVR is booting and will be ready for recording
 	strtRecWait:
 		rcall delay100ms
 		dec  tmp
