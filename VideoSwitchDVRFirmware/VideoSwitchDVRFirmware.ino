@@ -100,7 +100,7 @@ void loop() {
 	
 #ifdef MODECHANGE_PLAYRECORD
 	if(EV100_state==EV100AV){
-		// switch DVR to PLAY mode. Pressing K3 button for 2 seconds will stop recording and go to PLAY mode.
+		// switch DVR to PLAY mode. Pressing K3 button for 3 seconds will stop recording and go to PLAY mode.
 		DVR_K3_ON;
 		#ifdef DEBUG
 		LED_DEBUG_ON;
