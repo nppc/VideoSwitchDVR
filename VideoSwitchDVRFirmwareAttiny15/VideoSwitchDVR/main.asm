@@ -122,22 +122,22 @@ RESET:
 
 ; ***** LOOP *****
 loop:
-	rjmp loop
 	#ifdef DEBUG
-	rcall delay100ms
-	inc dbg
-	cpse dbg, z0
-	rjmp contdbg
-	; toggle sigG
-	ldi tmp1, (1<<PIN_EV100_SIG)
-	in tmp, PORTB
-	and tmp, tmp1
-	cpse tmp, z0
-	cbi PORTB, PIN_EV100_SIG
-	cpse tmp, tmp1
-	sbi PORTB, PIN_EV100_SIG
-	contdbg:
+		rcall delay100ms
+		inc dbg
+		cpse dbg, z0
+		rjmp contdbg
+		; toggle sigG
+		ldi tmp1, (1<<PIN_EV100_SIG)
+		in tmp, PORTB
+		and tmp, tmp1
+		cpse tmp, z0
+		cbi PORTB, PIN_EV100_SIG
+		cpse tmp, tmp1
+		sbi PORTB, PIN_EV100_SIG
+		contdbg:
 	#endif
+
 	rcall ReadEV100state ; update EV100state variable
 
 	; turn video switch according to EV100 state
@@ -153,6 +153,8 @@ loop:
 		cpse EV100_state, tmp
 		rjmp EV100RecordMode
 		; switch DVR to PLAY mode. Pressing K3 button for 3 seconds will stop recording and go to PLAY mode.
+		cpse DVR_state,z0
+		rjmp loopCont1	; skip if we already in PLAY mode
 		DVR_K3_ON
 		ldi tmp, 3000/100
 		rcall delayNs
@@ -178,9 +180,9 @@ loop:
 
 
 	#ifdef POWERLOSS_STOPRECORDING
-		; sense PIN_SWITCH_VIDEO pin only while EV100 in normal mode. If low, then stop recording as soon as possible
+		; sense PIN_SWITCH_VIDEO pin only while EV100 in normal (record) mode. If low, then stop recording as soon as possible
 		ldi tmp, EV100AV
-		cpse EV100_state, tmp ; check for power loss only while recording
+		cpse EV100_state, z0 ; check for power loss only while recording
 		rjmp loopCont2
 		in tmp, PINB ;new_state
 		andi tmp, (1<<PIN_SWITCH_VIDEO)
