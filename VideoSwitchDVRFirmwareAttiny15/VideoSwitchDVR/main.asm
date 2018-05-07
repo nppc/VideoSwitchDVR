@@ -12,6 +12,7 @@
 ;#define POWERLOSS_STOPRECORDING ; Stop recording on power loss.
 
 #define POWERON_DELAY 2000	;ms
+#define DVRBOOT_DELAY 15000	;ms
 
 
 .include "tn15def.inc"
@@ -113,6 +114,10 @@ RESET:
 	
 	DVR_POWER_ON
 
+	; give time to DVR for boot
+	ldi tmp, DVRBOOT_DELAY/100
+	rcall delayNs
+
 	#ifdef START_RECORDING
 		rcall startRecording ; delay and start recording
 	#endif
@@ -170,6 +175,9 @@ loop:
 		ldi tmp, 2000/100
 		rcall delayNs
 		DVR_POWER_ON
+		; give time to DVR for boot
+		ldi tmp, DVRBOOT_DELAY/100
+		rcall delayNs		
 		mov DVR_state,z0 ; record
 		#ifdef START_RECORDING
 			; If needed let's start recording.
@@ -196,17 +204,14 @@ loop:
 		halt: rjmp halt ; wait until supercapacitor will be empty
 	loopCont2:
 	#endif
+	
+	; check if two buttons on DVR are pressed (pulled to GND), then power off DVR. Power it back on when one of the buttons is pressed.
+	
 rjmp loop
 
 
 #ifdef START_RECORDING
 	startRecording:
-		; we can't use here delayNs, because our stack is only 3 levels deep (one we need to leave for possible interrupts)
-		ldi tmp, 15000/100 ;	wait while DVR is booting and will be ready for recording
-	strtRecWait:
-		rcall delay100ms
-		dec  tmp
-		brne strtRecWait
 		DVR_K1_ON;
 		rcall delay100ms
 		rcall delay100ms
