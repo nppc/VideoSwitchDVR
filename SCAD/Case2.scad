@@ -110,6 +110,7 @@ module support(){
   translate([2,-13.2,-2.5])cube([50,0.7,2],center=true);
   
   translate([2,-13.04,-0.1])cube([9,0.8,10],center=true);
+/*
   hull(){
   translate([2+9/2,-13.04,-0.1])cube([0.3,0.8,7.8],center=true);
   translate([2+9/2,13,-1+1])cube([0.3,0.8,7],center=true);
@@ -119,11 +120,12 @@ module support(){
   translate([2-9/2,13,-1+1])cube([0.3,0.8,7],center=true);
   }
   
-  translate([-6.6,-12.6,2])cube([8,1.5,4.9],center=true);
   hull(){
   translate([-6.6-3.85,-13.04,1.8])cube([0.3,0.8,4.1],center=true);
   translate([-6.6-4,13,0])cube([0.3,0.8,7],center=true);
   }
+ */
+  translate([-6.6,-12.6,2])cube([8,1.5,4.9],center=true);
 }
 
 
@@ -132,12 +134,12 @@ module button(){
     cylinder(d=3.1,h=1.7); //button
     translate([-3.1/2,5.5,0])cube([3.1,4,1]);
   }
-  translate([0,-0.2,-2.7])cylinder(d=2.6,h=2.7);
+  translate([0,-0.5,-2.7])cylinder(d=2,h=2.7);
   
-  hull(){
+/*  hull(){
   translate([0,0,-2.7])cylinder(d=2.5,h=2.7);
   translate([0,4,0])cylinder(d=2,h=0.1);
-  }
+  }*/
 }
 
 module case(wall){

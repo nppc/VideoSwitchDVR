@@ -20,6 +20,9 @@ There is two additional pads (K1, K3), that can be used for controlling 2 button
 ## Current version of the board
 ![Current PCB](Images/PrototypePCB.jpg)
 
+## Installed in the Goggles
+![printed box](Images/Case.jpg)
+
 ## Power
 I'm not sure how powerful is Goggle's DC/DC. So, it is safer to power DVR with additional DC/DC directly from Goggles battery.
 
