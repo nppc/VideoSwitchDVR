@@ -12,6 +12,7 @@
 ;#define POWERLOSS_STOPRECORDING ; Stop recording on power loss.
 
 #define POWERON_DELAY 2000	;ms
+#define DVRBOOT_DELAY 15000	;ms
 
 
 .include "tn15def.inc"
@@ -113,6 +114,10 @@ RESET:
 	
 	DVR_POWER_ON
 
+	; give time to DVR for boot
+	ldi tmp, DVRBOOT_DELAY/100
+	rcall delayNs
+
 	#ifdef START_RECORDING
 		rcall startRecording ; delay and start recording
 	#endif
@@ -123,19 +128,19 @@ RESET:
 ; ***** LOOP *****
 loop:
 	#ifdef DEBUG
-	rcall delay100ms
-	inc dbg
-	cpse dbg, z0
-	rjmp contdbg
-	; toggle sigG
-	ldi tmp1, (1<<PIN_EV100_SIG)
-	in tmp, PORTB
-	and tmp, tmp1
-	cpse tmp, z0
-	cbi PORTB, PIN_EV100_SIG
-	cpse tmp, tmp1
-	sbi PORTB, PIN_EV100_SIG
-	contdbg:
+		rcall delay100ms
+		inc dbg
+		cpse dbg, z0
+		rjmp contdbg
+		; toggle sigG
+		ldi tmp1, (1<<PIN_EV100_SIG)
+		in tmp, PORTB
+		and tmp, tmp1
+		cpse tmp, z0
+		cbi PORTB, PIN_EV100_SIG
+		cpse tmp, tmp1
+		sbi PORTB, PIN_EV100_SIG
+		contdbg:
 	#endif
 
 	rcall ReadEV100state ; update EV100state variable
@@ -155,6 +160,8 @@ loop:
 		cpse DVR_state,z0 ;if we already in play mode, then skip 
 		rjmp loopCont1
 		; switch DVR to PLAY mode. Pressing K3 button for 3 seconds will stop recording and go to PLAY mode.
+		cpse DVR_state,z0
+		rjmp loopCont1	; skip if we already in PLAY mode
 		DVR_K3_ON
 		ldi tmp, 3000/100
 		rcall delayNs
@@ -170,6 +177,9 @@ loop:
 		ldi tmp, 2000/100
 		rcall delayNs
 		DVR_POWER_ON
+		; give time to DVR for boot
+		ldi tmp, DVRBOOT_DELAY/100
+		rcall delayNs		
 		mov DVR_state,z0 ; record
 		#ifdef START_RECORDING
 			; If needed let's start recording.
@@ -180,9 +190,9 @@ loop:
 
 
 	#ifdef POWERLOSS_STOPRECORDING
-		; sense PIN_SWITCH_VIDEO pin only while EV100 in normal mode. If low, then stop recording as soon as possible
+		; sense PIN_SWITCH_VIDEO pin only while EV100 in normal (record) mode. If low, then stop recording as soon as possible
 		ldi tmp, EV100AV
-		cpse EV100_state, tmp ; check for power loss only while recording
+		cpse EV100_state, z0 ; check for power loss only while recording
 		rjmp loopCont2
 		in tmp, PINB ;new_state
 		andi tmp, (1<<PIN_SWITCH_VIDEO)
@@ -196,17 +206,14 @@ loop:
 		halt: rjmp halt ; wait until supercapacitor will be empty
 	loopCont2:
 	#endif
+	
+	; check if two buttons on DVR are pressed (pulled to GND), then power off DVR. Power it back on when one of the buttons is pressed.
+	
 rjmp loop
 
 
 #ifdef START_RECORDING
 	startRecording:
-		; we can't use here delayNs, because our stack is only 3 levels deep (one we need to leave for possible interrupts)
-		ldi tmp, 15000/100 ;	wait while DVR is booting and will be ready for recording
-	strtRecWait:
-		rcall delay100ms
-		dec  tmp
-		brne strtRecWait
 		DVR_K1_ON;
 		rcall delay100ms
 		rcall delay100ms
