@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.7  C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm Mon Apr 30 22:27:39 2018
+AVRASM ver. 2.2.7  C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm Wed May 02 22:35:42 2018
 
 
 EQU  SIGNATURE_000 0000001e
@@ -238,12 +238,12 @@ DEF  tmp1         r17
 DEF  tmp2         r18
 EQU  EV100AV      00000010
 CSEG RESET        00000009
-CSEG delayNs      00000047
+CSEG delayNs      00000048
 CSEG loop         0000001d
-CSEG ReadEV100state 00000035
-CSEG EV100RecordMode 0000002d
-CSEG loopCont1    00000034
-CSEG RdEV100StateL1 00000038
-CSEG delay100ms   00000040
-CSEG d100ms       00000042
-CSEG dNs          00000047
+CSEG ReadEV100state 00000036
+CSEG EV100RecordMode 0000002e
+CSEG loopCont1    00000035
+CSEG RdEV100StateL1 00000039
+CSEG delay100ms   00000041
+CSEG d100ms       00000043
+CSEG dNs          00000048

@@ -122,7 +122,6 @@ RESET:
 
 ; ***** LOOP *****
 loop:
-	rjmp loop
 	#ifdef DEBUG
 	rcall delay100ms
 	inc dbg
@@ -138,6 +137,7 @@ loop:
 	sbi PORTB, PIN_EV100_SIG
 	contdbg:
 	#endif
+
 	rcall ReadEV100state ; update EV100state variable
 
 	; turn video switch according to EV100 state
@@ -152,6 +152,8 @@ loop:
 		ldi tmp, EV100AV
 		cpse EV100_state, tmp
 		rjmp EV100RecordMode
+		cpse DVR_state,z0 ;if we already in play mode, then skip 
+		rjmp loopCont1
 		; switch DVR to PLAY mode. Pressing K3 button for 3 seconds will stop recording and go to PLAY mode.
 		DVR_K3_ON
 		ldi tmp, 3000/100

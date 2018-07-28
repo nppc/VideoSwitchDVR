@@ -23,14 +23,14 @@
  </OUTPUT_FILES>
  <LABELS>
   <RESET><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>80</LINE></RESET>
-  <delayNs><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>246</LINE></delayNs>
+  <delayNs><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>248</LINE></delayNs>
   <loop><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>124</LINE></loop>
-  <ReadEV100state><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>216</LINE></ReadEV100state>
-  <EV100RecordMode><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>162</LINE></EV100RecordMode>
-  <loopCont1><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>176</LINE></loopCont1>
-  <RdEV100StateL1><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>222</LINE></RdEV100StateL1>
-  <delay100ms><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>233</LINE></delay100ms>
-  <d100ms><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>237</LINE></d100ms>
-  <dNs><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>247</LINE></dNs>
+  <ReadEV100state><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>218</LINE></ReadEV100state>
+  <EV100RecordMode><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>164</LINE></EV100RecordMode>
+  <loopCont1><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>178</LINE></loopCont1>
+  <RdEV100StateL1><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>224</LINE></RdEV100StateL1>
+  <delay100ms><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>235</LINE></delay100ms>
+  <d100ms><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>239</LINE></d100ms>
+  <dNs><FILE>C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm</FILE><LINE>249</LINE></dNs>
  </LABELS>
 </ASSEMBLER_INFO>

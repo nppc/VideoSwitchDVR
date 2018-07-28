@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.7  C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm Mon Apr 30 22:27:39 2018
+AVRASM ver. 2.2.7  C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm Wed May 02 22:35:42 2018
 
 [builtin](2): Including file 'C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\tn15def.inc'
 C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\main.asm(17): Including file 'C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\tn15def.inc'
@@ -546,7 +546,7 @@ C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\mai
                                  
                                  	; DVR power ON delay
 000019 e104                      	ldi tmp, POWERON_DELAY/100
-00001a d02c                      	rcall delayNs
+00001a d02d                      	rcall delayNs
                                  	
 00001b 98c1                      	DVR_POWER_ON
                                  
@@ -558,40 +558,42 @@ C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\mai
                                  
                                  ; ***** LOOP *****
                                  loop:
-00001d cfff                      	rjmp loop
                                  	#ifdef DEBUG
                                  	#endif
-00001e d016                      	rcall ReadEV100state ; update EV100state variable
+                                 
+00001d d018                      	rcall ReadEV100state ; update EV100state variable
                                  
                                  	; turn video switch according to EV100 state
-00001f e100                      	ldi tmp, EV100AV
-000020 1240                      	cpse EV100_state, tmp
-000021 98bb                      	cbi DDRB, PIN_SWITCH_VIDEO ; Floating (Pulled up by external resistor)
-000022 1040                      	cpse EV100_state, z0
-000023 9abb                      	sbi DDRB, PIN_SWITCH_VIDEO ; Active Low
+00001e e100                      	ldi tmp, EV100AV
+00001f 1240                      	cpse EV100_state, tmp
+000020 98bb                      	cbi DDRB, PIN_SWITCH_VIDEO ; Floating (Pulled up by external resistor)
+000021 1040                      	cpse EV100_state, z0
+000022 9abb                      	sbi DDRB, PIN_SWITCH_VIDEO ; Active Low
                                  
                                  	; Define logic for MODECHANGE_PLAYRECORD
                                  	#ifdef MODECHANGE_PLAYRECORD
-000024 e100                      		ldi tmp, EV100AV
-000025 1240                      		cpse EV100_state, tmp
-000026 c006                      		rjmp EV100RecordMode
+000023 e100                      		ldi tmp, EV100AV
+000024 1240                      		cpse EV100_state, tmp
+000025 c008                      		rjmp EV100RecordMode
+000026 1030                      		cpse DVR_state,z0 ;if we already in play mode, then skip 
+000027 c00d                      		rjmp loopCont1
                                  		; switch DVR to PLAY mode. Pressing K3 button for 3 seconds will stop recording and go to PLAY mode.
-000027 9aba                      		DVR_K3_ON
-000028 e10e                      		ldi tmp, 3000/100
-000029 d01d                      		rcall delayNs
-00002a 98ba                      		DVR_K3_OFF
-00002b 2c31                      		mov DVR_state,z1 ; play
-00002c c007                      		rjmp loopCont1
+000028 9aba                      		DVR_K3_ON
+000029 e10e                      		ldi tmp, 3000/100
+00002a d01d                      		rcall delayNs
+00002b 98ba                      		DVR_K3_OFF
+00002c 2c31                      		mov DVR_state,z1 ; play
+00002d c007                      		rjmp loopCont1
                                  	EV100RecordMode:
                                  		; EV100 mode is normal. Need to  determine, are we just switched from AV?
-00002d 1031                      		cpse DVR_state,z1	; if(DVR_state!=0)
-00002e c005                      		rjmp loopCont1
+00002e 1031                      		cpse DVR_state,z1	; if(DVR_state!=0)
+00002f c005                      		rjmp loopCont1
                                  		; we need to reboot DVR to make 100% switch to recording mode
-00002f 9ac1                      		DVR_POWER_OFF
-000030 e104                      		ldi tmp, 2000/100
-000031 d015                      		rcall delayNs
-000032 98c1                      		DVR_POWER_ON
-000033 2c30                      		mov DVR_state,z0 ; record
+000030 9ac1                      		DVR_POWER_OFF
+000031 e104                      		ldi tmp, 2000/100
+000032 d015                      		rcall delayNs
+000033 98c1                      		DVR_POWER_ON
+000034 2c30                      		mov DVR_state,z0 ; record
                                  		#ifdef START_RECORDING
                                  		#endif
                                  	loopCont1:
@@ -600,7 +602,7 @@ C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\mai
                                  
                                  	#ifdef POWERLOSS_STOPRECORDING
                                  	#endif
-000034 cfe8                      rjmp loop
+000035 cfe7                      rjmp loop
                                  
                                  
                                  #ifdef START_RECORDING
@@ -609,39 +611,39 @@ C:\src\Temp\Git\VideoSwitchDVR\VideoSwitchDVRFirmwareAttiny15\VideoSwitchDVR\mai
                                  ; We read control pin from EV100 goggles and make sure, this is not a spike
                                  ReadEV100state:
                                  	; read new_state
-000035 b316                      	in tmp1, PINB ;new_state
-000036 7110                      	andi tmp1, EV100AV
-000037 2700                      	clr tmp
+000036 b316                      	in tmp1, PINB ;new_state
+000037 7110                      	andi tmp1, EV100AV
+000038 2700                      	clr tmp
                                  	; small delay
                                  RdEV100StateL1:	
-000038 950a                      	dec tmp
-000039 f7f1                      	brne RdEV100StateL1
+000039 950a                      	dec tmp
+00003a f7f1                      	brne RdEV100StateL1
                                  	; check pin again and update EV100_state accordingly
-00003a b326                      	in tmp2, PINB ;new_state
-00003b 7120                      	andi tmp2, EV100AV
-00003c 1312                      	cpse tmp1, tmp2
-00003d 2d14                      	mov tmp1, EV100_state	; no change to EV100_state
-00003e 2e41                      	mov EV100_state, tmp1
-00003f 9508                      	ret
+00003b b326                      	in tmp2, PINB ;new_state
+00003c 7120                      	andi tmp2, EV100AV
+00003d 1312                      	cpse tmp1, tmp2
+00003e 2d14                      	mov tmp1, EV100_state	; no change to EV100_state
+00003f 2e41                      	mov EV100_state, tmp1
+000040 9508                      	ret
                                  
                                  delay100ms:
                                  ; 99ms 995us 625 ns at 1.6 MHz (rcall and ret are not included, about 5us)
-000040 ed10                          ldi  tmp1, 208
-000041 ec28                          ldi  tmp2, 200
+000041 ed10                          ldi  tmp1, 208
+000042 ec28                          ldi  tmp2, 200
                                  d100ms: 
-000042 952a                      	dec  tmp2
-000043 f7f1                          brne d100ms
-000044 951a                          dec  tmp1
-000045 f7e1                          brne d100ms
-000046 9508                      	ret
+000043 952a                      	dec  tmp2
+000044 f7f1                          brne d100ms
+000045 951a                          dec  tmp1
+000046 f7e1                          brne d100ms
+000047 9508                      	ret
                                  	
                                  ; Delay subroutine
                                  ; Input variable: tmp = ms/100	
                                  delayNs:
-000047 dff8                      dNs:rcall delay100ms
-000048 950a                          dec  tmp
-000049 f7e9                          brne dNs
-00004a 9508                      	ret
+000048 dff8                      dNs:rcall delay100ms
+000049 950a                          dec  tmp
+00004a f7e9                          brne dNs
+00004b 9508                      	ret
 
 
 RESOURCE USE INFORMATION
@@ -659,7 +661,7 @@ counted separately from r26..r31 here.
 .dseg memory usage only counts static data declared with .byte
 
 "ATtiny15" register use summary:
-x  :   0 y  :   0 z  :   0 r0 :   3 r1 :   4 r2 :   0 r3 :   4 r4 :   5 
+x  :   0 y  :   0 z  :   0 r0 :   4 r1 :   4 r2 :   0 r3 :   5 r4 :   5 
 r5 :   0 r6 :   0 r7 :   0 r8 :   0 r9 :   0 r10:   0 r11:   0 r12:   0 
 r13:   0 r14:   0 r15:   0 r16:  12 r17:   7 r18:   5 r19:   0 r20:   0 
 r21:   0 r22:   0 r23:   0 r24:   0 r25:   0 r26:   0 r27:   0 r28:   0 
@@ -674,7 +676,7 @@ brlt  :   0 brmi  :   0 brne  :   4 brpl  :   0 brsh  :   0 brtc  :   0
 brts  :   0 brvc  :   0 brvs  :   0 bset  :   0 bst   :   0 cbi   :  12 
 cbr   :   0 clc   :   0 clh   :   0 cli   :   1 cln   :   0 clr   :   4 
 cls   :   0 clt   :   0 clv   :   0 clz   :   0 com   :   0 cp    :   0 
-cpc   :   0 cpi   :   0 cpse  :   5 dec   :   4 eor   :   0 in    :   2 
+cpc   :   0 cpi   :   0 cpse  :   6 dec   :   4 eor   :   0 in    :   2 
 inc   :   1 ld    :   0 ldi   :   8 lpm   :   0 lsl   :   0 lsr   :   0 
 mov   :   4 neg   :   0 nop   :   0 or    :   0 ori   :   0 out   :   1 
 rcall :   5 ret   :   3 reti  :   8 rjmp  :   6 rol   :   0 ror   :   0 
@@ -688,7 +690,7 @@ Instructions used: 17 out of 90 (18.9%)
 "ATtiny15" memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x000096    150      0    150    1024  14.6%
+[.cseg] 0x000000 0x000098    152      0    152    1024  14.8%
 [.dseg] 0x000000 0x000060      0      0      0       0      -
 [.eseg] 0x000000 0x000000      0      0      0      64   0.0%
 
